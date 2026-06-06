@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MAPEX E-CMR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&family=Dancing+Script&family=Oswald:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ─── RESET ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ─── THEME TOKENS ───────────────────────────────────── */
+:root{
+  --ff:'Outfit',sans-serif;
+  --fm:'JetBrains Mono',monospace;
+
+  /* light */
+  --bg:#f0eeea;
+  --panel:#ffffff;
+  --panel2:#f7f6f3;
+  --border:#e2e0da;
+  --border2:#cccac3;
+  --text:#1a1916;
+  --text2:#6b6960;
+  --text3:#a5a39c;
+  --accent:#01225E;
+  --accent-bg:#fff1ed;
+  --blue:#01225E;
+  --blue-bg:#eff3ff;
+  --amber:#01225E;
+  --amber-bg:#fffbeb;
+  --topbar-bg:#1a1916;
+  --topbar-text:#f0eeea;
+  --tag-dark:#1a1916;
+  --tag-dark-text:#f0eeea;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 32px rgba(0,0,0,.08);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.05),0 24px 64px rgba(0,0,0,.12);
+}
+[data-theme="dark"]{
+  --bg:#0e0e11;
+  --panel:#18181f;
+  --panel2:#21212a;
+  --border:#2c2c38;
+  --border2:#3a3a4a;
+  --text:#f0eee8;
+  --text2:#888797;
+  --text3:#4a4a5a;
+  --accent:#01225E;
+  --accent-bg:#2a1308;
+  --blue:#6a9bff;
+  --blue-bg:#0d1428;
+  --amber:#fbbf24;
+  --amber-bg:#1c1400;
+  --topbar-bg:#0a0a0d;
+  --topbar-text:#f0eee8;
+  --tag-dark:#f0eee8;
+  --tag-dark-text:#0e0e11;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 8px 32px rgba(0,0,0,.5);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 24px 64px rgba(0,0,0,.6);
+}
+
+/* ─── BASE ───────────────────────────────────────────── */
+body{
+  font-family:var(--ff);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  transition:background .3s,color .3s;
+}
+
+/* ─── TOPBAR ─────────────────────────────────────────── */
+.topbar{
+  background:var(--topbar-bg);
+  color:var(--topbar-text);
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  flex-shrink:0;
+  position:sticky;top:0;z-index:200;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+}
+.brand-pip{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:900;color:#fff;letter-spacing:0;
+}
+.brand-sub{font-size:9px;font-weight:400;opacity:.45;letter-spacing:1px;margin-left:2px;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.t-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  color:var(--topbar-text);padding:6px 14px;border-radius:7px;
+  cursor:pointer;font-family:var(--ff);font-size:10px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;
+  transition:background .2s;white-space:nowrap;
+}
+.t-btn:hover{background:rgba(255,255,255,.16);}
+.t-btn-accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+.t-btn-accent:hover{background:#c73d0c;}
+
+/* ─── MOBILE TABS ────────────────────────────────────── */
+.mob-tabs{
+  display:none;background:var(--panel);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:150;
+}
+.mob-tab{
+  flex:1;padding:12px;background:none;border:none;
+  color:var(--text2);font-family:var(--ff);font-size:10px;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.mob-tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ─── WORKSPACE ──────────────────────────────────────── */
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0;}
+
+/* ─── SIDEBAR ────────────────────────────────────────── */
+.sidebar{
+  width:360px;flex-shrink:0;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:background .3s,border-color .3s;
+}
+.sb-body{flex:1;overflow-y:auto;padding:20px;}
+.sb-body::-webkit-scrollbar{width:3px;}
+.sb-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* Section headings */
+.sh{
+  display:flex;align-items:center;gap:8px;
+  font-size:9px;font-weight:700;color:var(--text3);
+  letter-spacing:2.5px;text-transform:uppercase;
+  margin:22px 0 10px;
+}
+.sh:first-child{margin-top:0;}
+.sh-num{
+  width:18px;height:18px;border-radius:4px;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:900;flex-shrink:0;
+}
+.sh::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Fields */
+.field{margin-bottom:8px;}
+.field label{
+  display:block;font-size:10px;font-weight:600;
+  color:var(--text2);margin-bottom:4px;letter-spacing:.3px;
+}
+.field input,.field textarea{
+  width:100%;background:var(--panel2);
+  border:1.5px solid var(--border);
+  color:var(--text);padding:9px 11px;
+  border-radius:8px;font-family:var(--ff);font-size:12.5px;
+  outline:none;resize:none;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+}
+.field input:focus,.field textarea:focus{
+  border-color:var(--accent);
+  background:var(--panel);
+  box-shadow:0 0 0 3px var(--accent-bg);
+}
+.field textarea{min-height:52px;line-height:1.4;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* Toggle chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
+.chip{
+  padding:7px 13px;border-radius:100px;
+  border:1.5px solid var(--border);
+  background:var(--panel2);color:var(--text2);
+  font-family:var(--ff);font-size:10px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;
+  user-select:none;
+}
+.chip:hover{border-color:var(--border2);}
+.chip.chip-adr{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.chip.chip-over{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);}
+.chip.chip-stamp{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
+
+/* Sidebar footer */
+.sb-foot{
+  padding:14px 20px;
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.f-btn{
+  padding:11px;border:none;border-radius:8px;
+  font-family:var(--ff);font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.f-btn:active{transform:scale(.97);}
+.f-btn:hover{opacity:.85;}
+.f-primary{background:var(--accent);color:#fff;}
+.f-secondary{background:var(--panel2);color:var(--text);border:1.5px solid var(--border);}
+.sb-copy{
+  text-align:center;padding:8px;
+  font-size:9px;color:var(--text3);letter-spacing:.5px;
+  font-family:var(--fm);
+}
+
+/* ─── PREVIEW PANE ───────────────────────────────────── */
+.preview{
+  flex:1;overflow:auto;
+  background:var(--bg);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:28px 20px 60px;
+  transition:background .3s;
+}
+.preview::-webkit-scrollbar{width:5px;}
+.preview::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.doc-scaler{transform-origin:top center;}
+
+/* ──────────────────────────────────────────────────────
+   CMR DOCUMENT — EXACT ORIGINAL, NO CHANGES
+   ────────────────────────────────────────────────────── */
+.cmr-paper{
+  width:595px;height:842px;background:#fff;color:#000;padding:25px;
+  position:relative;box-shadow:0 40px 80px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;
+}
+.cmr-grid{
+  border:2px solid #01225E;flex:1;
+  display:grid;grid-template-columns:repeat(12,1fr);
+  grid-template-rows:repeat(31,1fr);width:100%;
+}
+.c{border:.5px solid #01225E;padding:4px;overflow:hidden;}
+.c b{color:#01225E;font-size:12px;display:block;font-weight:900;line-height:1;margin-bottom:2px;font-family:'Inter',sans-serif;}
+.v{font-size:9.5px;font-weight:600;line-height:1.1;color:#000;white-space:pre-wrap;font-family:'Inter',sans-serif;}
+.sig-box{font-family:'Dancing Script',cursive;font-size:18px;color:#1e40af;text-align:center;margin-top:5px;min-height:25px;}
+
+.adr-banner{
+  position:absolute;top:12px;right:25px;
+  background:#f59e0b;border:2px solid #000;
+  padding:5px 14px;font-weight:900;font-size:11px;
+  display:none;z-index:10;letter-spacing:.5px;
+  box-shadow:0 2px 4px rgba(0,0,0,.15);
+  font-family:'Inter',sans-serif;
+}
+.oversize-banner{
+  position:absolute;top:12px;left:25px;
+  background:#eab308;color:#000;
+  border:2px solid #000;
+  padding:5px 14px;font-weight:900;font-size:11px;
+  display:none;z-index:10;letter-spacing:.5px;
+  box-shadow:0 2px 4px rgba(0,0,0,.15);
+  background-image:linear-gradient(45deg,#000 25%,transparent 25%,transparent 50%,#000 50%,#000 75%,transparent 75%,transparent);
+  background-size:15px 15px;
+}
+.oversize-banner span{background:#eab308;color:#000;padding:2px 6px;border-radius:2px;font-family:'Inter',sans-serif;}
+.paid-stamp{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-25deg);
+  border:5px solid rgba(211,47,47,.8);
+  color:rgba(211,47,47,.8);
+  font-family:'Oswald',sans-serif;
+  font-size:52px;font-weight:900;
+  padding:10px 35px;opacity:0;
+  pointer-events:none;z-index:5;
+  white-space:nowrap;text-transform:uppercase;letter-spacing:2px;
+}
+.paid-stamp span{font-size:18px;display:block;margin-top:-5px;font-weight:700;letter-spacing:1px;}
+
+/* ─── MOBILE RESPONSIVE ──────────────────────────────── */
+@media(max-width:960px){
+  .mob-tabs{display:flex;}
+  .sidebar{
+    position:fixed;left:0;right:0;
+    top:52px;bottom:44px;
+    width:100%;z-index:100;
+    overflow:hidden;
+    transform:translateX(0);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar.slide-out{transform:translateX(-100%);}
+  .preview{
+    position:fixed;left:0;right:0;
+    top:52px;bottom:44px;
+    z-index:90;
+    padding:12px 8px 12px;
+    transform:translateX(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .preview.slide-in{transform:translateX(0);}
+  .mob-tabs{position:sticky;top:52px;display:flex;}
+  .workspace{padding-bottom:0;flex:none;height:calc(100dvh - 96px);}
+}
+
+@media print{
+  @page{size:A4;margin:0;}
+  html,body{background:#fff!important;}
+  .topbar,.mob-tabs,.sidebar{display:none!important;}
+  .workspace{display:block;overflow:visible;}
+  .preview{
+    display:block!important;
+    position:static!important;
+    transform:none!important;
+    padding:0!important;background:#fff!important;
+  }
+  .doc-scaler{transform:none!important;padding:0!important;}
+  .cmr-paper{box-shadow:none!important;width:100vw!important;height:100vh!important;padding:30px!important;}
+}
+</style>
+<!-- Keep Inter for the CMR document cells -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;900&display=swap" rel="stylesheet">
+</head>
+<body data-theme="dark">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-pip">V</div>
+    MAPEX E-CMR
+  </div>
+  <div class="topbar-right">
+    <button class="t-btn" onclick="toggleTheme()" id="theme-btn">☀ Jasny</button>
+    <button class="t-btn" onclick="window.print()">Drukuj</button>
+    <button class="t-btn t-btn-accent" onclick="downloadImage()">↓ PNG</button>
+  </div>
+</div>
+
+<!-- MOBILE TABS -->
+<div class="mob-tabs" id="mob-tabs">
+  <button class="mob-tab on" id="mt-form" onclick="switchTab('form')">Formularz</button>
+  <button class="mob-tab" id="mt-prev" onclick="switchTab('prev')">Podgląd CMR</button>
+</div>
+
+<div class="workspace">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-body">
+
+      <div class="sh"><span class="sh-num">1</span>Podmioty</div>
+      <div class="field"><label>Nadawca (pole 1)</label><textarea id="i1" placeholder="Nazwa firmy, adres, kraj…"></textarea></div>
+      <div class="field"><label>Odbiorca (pole 2)</label><textarea id="i2" placeholder="Nazwa firmy, adres, kraj…"></textarea></div>
+      <div class="field"><label>Przewoźnik (pole 16)</label><input type="text" id="i16" placeholder="Nazwa firmy przewozowej"></div>
+
+      <div class="sh"><span class="sh-num">2</span>Trasa & Pojazd</div>
+      <div class="g2">
+        <div class="field"><label>Rejestracja ciągnika</label><input type="text" id="irej" placeholder="ABC 12345"></div>
+        <div class="field"><label>Rejestracja naczepy</label><input type="text" id="inac" placeholder="XYZ 67890"></div>
+      </div>
+      <div class="field"><label>Miejsce załadunku (pole 4)</label><input type="text" id="i4" placeholder="Miasto, kraj, data"></div>
+      <div class="field"><label>Miejsce rozładunku (pole 3)</label><input type="text" id="i3" placeholder="Miasto, kraj, data"></div>
+
+      <div class="sh"><span class="sh-num">3</span>Ładunek</div>
+      <div class="field"><label>Opis towaru (pola 6–9)</label><input type="text" id="i9" placeholder="Rodzaj ładunku"></div>
+      <div class="g2">
+        <div class="field"><label>Ilość (pole 7)</label><input type="text" id="i7" placeholder="np. 22 palety"></div>
+        <div class="field"><label>Waga brutto (pole 11)</label><input type="text" id="i11" placeholder="np. 24 000 kg"></div>
+      </div>
+
+      <div class="sh"><span class="sh-num">4</span>Uwagi & Finanse</div>
+      <div class="field"><label>Uwagi przewoźnika (pole 18)</label><textarea id="i18" placeholder="Stan towaru, zabezpieczenie…"></textarea></div>
+      <div class="field"><label>Fracht — cena za przewóz</label><input type="text" id="ifracht" placeholder="np. 4 500 PLN"></div>
+
+      <div class="sh"><span class="sh-num">5</span>Podpisy</div>
+      <div class="g2">
+        <div class="field"><label>Podpis nadawcy (22)</label><input type="text" id="isig22" placeholder="Imię Nazwisko"></div>
+        <div class="field"><label>Podpis odbiorcy (24)</label><input type="text" id="isig24" placeholder="Imię Nazwisko"></div>
+      </div>
+
+      <div class="sh"><span class="sh-num">6</span>Opcje dokumentu</div>
+      <div class="chips">
+        <button class="chip" id="chip-adr" onclick="toggleOpt('adr')">⚠ ADR</button>
+        <button class="chip" id="chip-over" onclick="toggleOpt('over')">↔ Gabaryt</button>
+        <button class="chip" id="chip-stamp" onclick="toggleOpt('stamp')">✓ Pieczątka</button>
+      </div>
+
+    </div>
+
+    <div class="sb-foot">
+      <button class="f-btn f-primary" onclick="downloadImage()">Pobierz PNG</button>
+      <button class="f-btn f-secondary" onclick="window.print()">Drukuj / PDF</button>
+    </div>
+    <div class="sb-copy">wvxro & natiz © All rights reserved</div>
+  </div>
+
+  <!-- ── PREVIEW ── -->
+  <div class="preview" id="preview-pane">
+    <div class="doc-scaler" id="scaler">
+
+      <!-- ════════════════════════════════════════════
+           CMR PAPER — EXACT ORIGINAL
+           ════════════════════════════════════════════ -->
+      <div class="cmr-paper" id="final-document">
+
+        <div class="adr-banner" id="adr-tag">ŁADUNEK NIEBEZPIECZNY / ADR</div>
+        <div class="oversize-banner" id="oversize-tag"><span>⚠️ GABARYT / OVERSIZE</span></div>
+        <div class="paid-stamp" id="stamp-img">ZATWIERDZONE<span>Dział Logistyki / Logistics Dept.</span></div>
+
+        <div id="cmr-header-text" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;margin-top:20px;">
+          <span style="font-family:'Oswald';font-size:30px;color:#01225E;line-height:1;">CMR</span>
+          <div style="text-align:right;font-size:12px;color:#01225E;font-weight:bold;font-family:'Inter',sans-serif;">MIĘDZYNARODOWY LIST PRZEWOZOWY</div>
+        </div>
+
+        <div class="cmr-grid" id="main-border">
+          <div class="c" style="grid-column:span 6;grid-row:span 5;"><b>1 Nadawca / Sender</b><div class="v" id="o1"></div></div>
+          <div class="c" style="grid-column:span 6;grid-row:span 5;border-left:2px solid #01225E;"><b>16 Przewoźnik / Carrier</b><div class="v" id="o16" style="font-weight:800;"></div><div style="margin-top:10px;font-size:9px;color:#01225E;font-weight:900;font-family:'Inter',sans-serif;">POJAZD: <span class="v" id="orej"></span></div></div>
+
+          <div class="c" style="grid-column:span 6;grid-row:span 5;"><b>2 Odbiorca / Consignee</b><div class="v" id="o2"></div></div>
+          <div class="c" style="grid-column:span 6;grid-row:span 5;"><b>17 Kolejni przewoźnicy</b><div class="v">Brak</div></div>
+
+          <div class="c" style="grid-column:span 6;grid-row:span 2;"><b>3 Przeznaczenie</b><div class="v" id="o3"></div></div>
+          <div class="c" style="grid-column:span 6;grid-row:span 4;"><b>18 Uwagi Przewoźnika</b><div class="v" id="o18"></div></div>
+          <div class="c" style="grid-column:span 6;grid-row:span 2;"><b>4 Załadunek</b><div class="v" id="o4"></div></div>
+
+          <div class="c" style="grid-column:span 12;grid-row:span 9;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr;height:100%;">
+              <div style="border-right:.5px solid #01225E;padding:4px;"><b>6-9 Towar / Nature of Goods</b><div class="v" id="o9" style="font-size:12px;margin-top:10px;"></div></div>
+              <div style="border-right:.5px solid #01225E;padding:4px;"><b>7 Ilość</b><div class="v" id="o7"></div></div>
+              <div style="padding:4px;"><b>11 Waga Brutto</b><div class="v" id="o11"></div></div>
+            </div>
+          </div>
+
+          <div class="c" style="grid-column:span 4;grid-row:span 4;"><b>22 Podpis Nadawcy</b><div class="sig-box" id="osig22"></div></div>
+          <div class="c" style="grid-column:span 4;grid-row:span 4;"><b>23 Podpis Przewoźnika</b><div class="sig-box" id="osig"></div></div>
+          <div class="c" style="grid-column:span 4;grid-row:span 4;"><b>24 Podpis Odbiorcy</b><div class="sig-box" id="osig24"></div></div>
+
+          <div class="c" style="grid-column:span 12;grid-row:span 2;background:#fafafa;border-top:1.5px solid #01225E;display:flex;justify-content:space-between;align-items:center;padding:4px 10px;">
+            <b style="font-size:8px;font-family:'Inter',sans-serif;">POSTANOWIENIA ODNOŚNIE FRACHTU / CENA ZA PRZEWÓZ:</b>
+            <div id="ofracht" style="font-family:'Oswald',sans-serif;font-size:14px;color:#1e3a8a;font-weight:bold;letter-spacing:.5px;"></div>
+          </div>
+        </div>
+
+        <div style="font-size:5.5px;color:#aaa;margin-top:5px;text-align:center;font-weight:bold;letter-spacing:.5px;font-family:'Inter',sans-serif;">MAPEX E-CMR eCMR | wvxro & natiz©</div>
+      </div>
+      <!-- ════════════════════════════════════════════ -->
+
+    </div>
+  </div>
+
+</div><!-- /workspace -->
+
+<script>
+const opts={adr:false,over:false,stamp:false};
+let isDark=true;
+
+/* ── render CMR ── */
+function update(){
+  const map=[['1','o1'],['2','o2'],['16','o16'],['3','o3'],['4','o4'],['9','o9'],['7','o7'],['11','o11'],['18','o18']];
+  map.forEach(([i,o])=>{
+    const el=document.getElementById(o);
+    if(el) el.innerText=document.getElementById('i'+i).value||'';
+  });
+  document.getElementById('orej').innerText=
+    [document.getElementById('irej').value,document.getElementById('inac').value].filter(Boolean).join(' / ');
+  document.getElementById('osig').innerText=document.getElementById('i16').value||'';
+  document.getElementById('osig22').innerText=document.getElementById('isig22').value||'';
+  document.getElementById('osig24').innerText=document.getElementById('isig24').value||'';
+  document.getElementById('ofracht').innerText=document.getElementById('ifracht').value||'---';
+}
+
+/* ── option toggles ── */
+function toggleOpt(k){
+  opts[k]=!opts[k];
+  if(k==='adr'){
+    document.getElementById('chip-adr').className='chip'+(opts.adr?' chip-adr':'');
+    document.getElementById('adr-tag').style.display=opts.adr?'block':'none';
+  }
+  if(k==='over'){
+    document.getElementById('chip-over').className='chip'+(opts.over?' chip-over':'');
+    document.getElementById('oversize-tag').style.display=opts.over?'block':'none';
+  }
+  if(k==='stamp'){
+    document.getElementById('chip-stamp').className='chip'+(opts.stamp?' chip-stamp':'');
+    document.getElementById('stamp-img').style.opacity=opts.stamp?'1':'0';
+  }
+}
+
+/* ── theme ── */
+function toggleTheme(){
+  isDark=!isDark;
+  document.body.setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('theme-btn').textContent=isDark?'☀ Jasny':'☾ Ciemny';
+}
+
+/* ── scale document to fit ── */
+function scaleDoc(){
+  const pane=document.getElementById('preview-pane');
+  const scaler=document.getElementById('scaler');
+  if(!pane||!scaler) return;
+  const pw=pane.clientWidth;
+  const ph=pane.clientHeight;
+  const sw=pw-40;
+  const sh=ph-56;
+  const s=Math.min(1, sw/595, sh/842);
+  scaler.style.transform=`scale(${s})`;
+}
+
+/* ── mobile tabs ── */
+function switchTab(t){
+  const sb=document.getElementById('sidebar');
+  const pv=document.getElementById('preview-pane');
+  const mf=document.getElementById('mt-form');
+  const mp=document.getElementById('mt-prev');
+  if(t==='form'){
+    sb.classList.remove('slide-out');
+    pv.classList.remove('slide-in');
+    mf.classList.add('on');mp.classList.remove('on');
+  } else {
+    update();
+    sb.classList.add('slide-out');
+    pv.classList.add('slide-in');
+    mf.classList.remove('on');mp.classList.add('on');
+    scaleDoc();
+  }
+}
+
+/* ── download ── */
+function downloadImage(){
+  update();
+  html2canvas(document.getElementById('final-document'),{scale:3,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
+    const a=document.createElement('a');
+    a.download='E-CMR MAPEX.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+
+/* ── init ── */
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',update));
+window.addEventListener('resize',scaleDoc);
+update();
+setTimeout(scaleDoc,50);
+</script>
+</body>
+</html>
